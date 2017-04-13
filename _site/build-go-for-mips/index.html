@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="songroger">
+
+  <title>MIPS来跑Go应用</title>
+
+  <meta name="description" content="&lt;h4 id=&quot;起因&quot;&gt;起因：&lt;/h4&gt;">
+
+  <!-- Open graph data -->
+  <meta property="og:site_name" content="songroger">
+  <meta property="og:title" content="MIPS来跑Go应用">
+  <meta property="og:url" content="http://localhost:4000/build-go-for-mips/">
+  <meta property="og:type" content="article">
+  <meta property="og:description" content="&lt;h4 id=&quot;起因&quot;&gt;起因：&lt;/h4&gt;">
+
+  <!-- Standard Stuff -->
+  <link rel="canonical" href="http://localhost:4000/build-go-for-mips/"/>
+  <link rel="alternate" type="application/rss+xml" title="songroger" href="http://localhost:4000/feed.xml"/>
+
+  <!-- Favicons -->
+  <link rel="shortcut icon" href="http://7xof48.com1.z0.glb.clouddn.com/favicon.png">
+  <meta name="msapplication-TileColor" content="#ffffff">
+  <meta name="msapplication-config" content="/assets/browserconfig.xml">
+  <meta name="theme-color" content="#ffffff">
+
+  <!-- Styles -->
+  
+    <link rel="stylesheet" href="http://7xof48.com1.z0.glb.clouddn.com/songroger/main.min.css">
+  
+
+
+</head>
+
+<body>
+
+  <header class="header">
+
+    
+      <div class="header__logo">
+        <a href="/" class="header__link--logo">
+        <!-- <div class="spinner"></div> -->
+        <img src="http://7xof48.com1.z0.glb.clouddn.com/avatar.jpg"></a>
+      </div>
+    
+
+    <nav class="header__nav" role="navigation">      
+      <a href="/archive/" class="header__link">Archive</a>
+      <a href="http://twitter.com/songrogero" class="header__link" target="_blank">Twitter</a>
+      <!-- <a href="http://github.com/songroger" class="header__link" target="_blank">Github</a> -->
+      <a href="http://facebook.com/song.roger.1" class="header__link" target="_blank">Facebook</a>
+      <a href="/about/" class="header__link">About</a>
+    </nav>
+  </header>
+
+  <main class="col">
+
+
+<article class="article">
+  <h2 class="article__title article__title--single">MIPS来跑Go应用</h2>
+  <time class="article__date" datetime="2017-03-21"> 02:15 Mar.21-2017</time>
+  
+  <h4 id="起因">起因：</h4>
+
+<p>手上有个1代极路由，mips的cpu.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>root@Hiwifi:/tmp/storage/sda/songroger/godir/mipsgo# cat /proc/cpuinfo
+system type     : Atheros AR9330 rev 1
+machine         : Turbo Wireless TW150V1 Board
+processor       : 0
+cpu model       : MIPS 24Kc V7.4
+BogoMIPS        : 265.42
+wait instruction    : yes
+microsecond timers  : yes
+tlb_entries     : 16
+extra interrupt vector  : yes
+hardware watchpoint : yes, count: 4, address/irw mask: [0x0000, 0x0100, 0x0418, 0x0088]
+ASEs implemented    : mips16
+shadow register sets    : 1
+kscratch registers  : 0
+core            : 0
+VCED exceptions     : not available
+VCEI exceptions     : not available
+</code></pre>
+</div>
+<p>用了这么久才发现可以开openwrt，于是觉得不再折腾下实在是对不起它，想着搭一个文件服务器。
+路由已有的环境是lua＋nginx，对于可以写点lua的童鞋来说，其实也够了。但非lua就只能懵圈了。于是开始搭python环境，安装过程真是一把心酸，放弃了…
+openwrt有它自己的生态，但是跟完整的linux版本来比，要玩转跑各种语言还是很麻烦或者不支持。
+最后选定了go，代码整理好了才发现编译的移到上面都跑不起来.本来也就这样结束了。
+直到发现了<a href="https://github.com/gomini/go-mips32">go-mips32</a>这个项目，
+算是带来了点希望,而且最后还成功了，纪录下。</p>
+
+<hr />
+<ol>
+  <li>
+    <p>下载</p>
+
+    <ul>
+      <li><code class="highlighter-rouge">git clone https://github.com/gomini/go-mips32.git</code></li>
+      <li><code class="highlighter-rouge">cd go-mips32/src</code></li>
+    </ul>
+  </li>
+  <li>
+    <p>配置编译参数</p>
+
+    <ul>
+      <li><code class="highlighter-rouge">export GOOS=linux</code></li>
+      <li><code class="highlighter-rouge">export GOARCH=mips32</code></li>
+    </ul>
+  </li>
+  <li>执行编译(mac下好像不行，也没搜到解决方案，最后老实换linux才编成功)
+<code class="highlighter-rouge">./make.bash</code>
+直到看到如下类似信息，说明成功了。
+    <div class="highlighter-rouge"><pre class="highlight"><code>---
+Installed Go for linux/mips32 in /tmp/mips/go-mips32
+Installed commands in /tmp/mips/go-mips32/bin
+</code></pre>
+    </div>
+  </li>
+  <li>
+    <p>把编译好的这些文件复制到某个文件夹</p>
+
+    <p><code class="highlighter-rouge">sudo cp -R * /opt/mipsgo</code></p>
+  </li>
+  <li>
+    <p>把复制到的文件夹设置为go编译参数</p>
+
+    <ul>
+      <li><code class="highlighter-rouge">export GOROOT=/opt/mipsgo</code></li>
+      <li><code class="highlighter-rouge">export PATH=/opt/mipsgo/bin:$PATH</code></li>
+    </ul>
+  </li>
+</ol>
+
+<p>然后就可以去代码中<code class="highlighter-rouge">go build</code>你的mips应用了。</p>
+
+
+  
+</article>
+
+<div class="blocks">
+  <div class="block__item block__item--mr">
+    <a href="https://twitter.com/intent/tweet?text=MIPS来跑Go应用&amp;url=http://localhost:4000/build-go-for-mips/&amp;via=songrogero">
+      <svg class="btn__icon" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <title>Twitter Icon</title>
+        <path d="M14.4 4.2C14.4 4.4 14.4 4.5 14.4 4.7 14.4 9 11.1 14 5 14 3.2 14 1.5 13.5 0 12.5 0.3 12.6 0.5 12.6 0.8 12.6 2.3 12.6 3.7 12 4.9 11.2 3.4 11.1 2.2 10.2 1.8 8.9 2 8.9 2.2 8.9 2.4 8.9 2.7 8.9 3 8.9 3.3 8.8 1.8 8.5 0.6 7.2 0.6 5.6L0.6 5.6C1.1 5.8 1.6 6 2.1 6 1.2 5.4 0.7 4.4 0.7 3.2 0.7 2.6 0.8 2.1 1.1 1.6 2.7 3.6 5.2 4.9 7.9 5 7.8 4.8 7.8 4.5 7.8 4.3 7.8 2.5 9.3 1 11.1 1 12 1 12.9 1.4 13.5 2 14.2 1.9 14.9 1.6 15.6 1.2 15.3 2 14.8 2.6 14.1 3.1 14.8 3 15.4 2.8 16 2.5 15.6 3.2 15 3.8 14.4 4.2L14.4 4.2Z"/>
+      </svg>
+    </a>
+  </div>
+  <div class="block__item">
+    <a href="https://www.facebook.com/sharer/sharer.php?u=http://localhost:4000/build-go-for-mips/">
+      <svg class="btn__icon" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <title>Facebook Icon</title>
+        <path d="M9.5 3L12 3 12 0 9.5 0C7.6 0 6 1.6 6 3.5L6 5 4 5 4 8 6 8 6 16 9 16 9 8 11.5 8 12 5 9 5 9 3.5C9 3.2 9.2 3 9.5 3L9.5 3Z"/>
+      </svg>
+    </a>
+  </div>
+</div>
+<hr>
+<p id="back-to-top"><a href="#top"><img src="http://7xof48.com1.z0.glb.clouddn.com/songroger/top.png"/></a></p>
+<script src="http://libs.baidu.com/jquery/1.9.1/jquery.min.js"></script>
+<script src="http://7xof48.com1.z0.glb.clouddn.com/songroger/top.js"></script>
+
+<!-- disqus 评论-->
+<!-- <div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'songroger'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript> -->
+
+<!-- 多说评论框 start -->
+<div class="ds-thread" data-thread-key="songroger" data-title="MIPS来跑Go应用" data-url="http://localhost:4000/build-go-for-mips/"></div>
+<!-- 多说评论框 end -->
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"songroger"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+     || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+  </script>
+<!-- 多说公共JS代码 end -->
+
+
+<footer class="footer">
+	<div class="col">
+		© 2014-2016 Songroger | <a href="/feed.xml" class="subscribe">RSS</a>
+	</div>
+</footer>
+<script type="text/javascript">
+  //友盟统计
+  var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+  document.write(unescape("%3Cspan style='display:none;' id='cnzz_stat_icon_1260641879'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1260641879' type='text/javascript'%3E%3C/script%3E"));
+</script>
+</body>
+</html>
